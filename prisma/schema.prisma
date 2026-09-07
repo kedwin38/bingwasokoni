@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// AdminRole: "SUPER_ADMIN" | "ADMIN"
+model Admin {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         String    @default("ADMIN")
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastLoginAt  DateTime?
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  icon      String?
+  sortOrder Int       @default(0)
+  isActive  Boolean   @default(true)
+  packages  Package[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Package {
+  id           String        @id @default(cuid())
+  categoryId   String
+  category     Category      @relation(fields: [categoryId], references: [id])
+  name         String
+  price        Int
+  amountLabel  String
+  validity     String
+  description  String?
+  badge        String?
+  isActive     Boolean       @default(true)
+  sortOrder    Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+}
+
+/// TransactionStatus: "PENDING" | "SUCCESS" | "FAILED" | "CANCELLED" | "TIMEOUT"
+model Transaction {
+  id                 String    @id @default(cuid())
+  packageId          String?
+  package            Package?  @relation(fields: [packageId], references: [id])
+  phoneNumber        String
+  amount             Int
+  status             String    @default("PENDING")
+  merchantRequestId  String?
+  checkoutRequestId  String?   @unique
+  mpesaReceiptNumber String?
+  resultCode         Int?
+  resultDesc         String?
+  rawCallback        String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model MpesaConfig {
+  id                String   @id @default("default")
+  environment       String   @default("sandbox")
+  shortCode         String   @default("174379")
+  tillType          String   @default("paybill")
+  consumerKeyEnc    String   @default("")
+  consumerSecretEnc String   @default("")
+  passkeyEnc        String   @default("")
+  accountReference  String   @default("BingwaSokoni")
+  transactionDesc   String   @default("Data Bundle Purchase")
+  callbackBaseUrl   String?
+  isConfigured      Boolean  @default(false)
+  updatedAt         DateTime @updatedAt
+}
+
+model SiteSettings {
+  id            String   @id @default("default")
+  businessName  String   @default("BingwaSokoni")
+  tagline       String   @default("Fast. Reliable. Instant Data.")
+  supportPhone  String   @default("0768050573")
+  whatsappPhone String   @default("0768050573")
+  updatedAt     DateTime @updatedAt
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  email     String?
+  message   String
+  status    String   @default("NEW")
+  createdAt DateTime @default(now())
+}
