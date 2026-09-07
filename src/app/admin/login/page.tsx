@@ -46,7 +46,7 @@ function LoginForm() {
           </span>
           <div>
             <h1 className="font-display text-xl font-bold text-cream">Admin Sign In</h1>
-            <p className="mt-1 text-sm text-cream/60">BingwaSokoni control panel</p>
+            <p className="mt-1 text-sm text-cream/60">Berna Gee control panel</p>
           </div>
         </div>
 

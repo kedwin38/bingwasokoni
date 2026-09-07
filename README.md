@@ -1,4 +1,4 @@
-# BingwaSokoni — Data, Minutes & SMS Marketplace
+# Berna Gee — Data, Minutes & SMS Marketplace
 
 A fast, AI-assisted data/airtime bundle storefront with M-Pesa (Safaricom Daraja) STK Push checkout, a client-facing site, and a full admin control panel.
 

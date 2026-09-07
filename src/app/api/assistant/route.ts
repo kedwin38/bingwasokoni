@@ -17,7 +17,7 @@ async function enrichWithLLM(message: string, base: AssistantResult): Promise<st
         model: "claude-haiku-4-5-20251001",
         max_tokens: 200,
         system:
-          "You are a friendly, concise shopping assistant for a Kenyan data bundle reseller called BingwaSokoni. Given a customer's message and a shortlist of matching packages, write a short warm reply (2-4 sentences max, no markdown headers) recommending from the shortlist. Never invent packages or prices outside the shortlist provided.",
+          "You are a friendly, concise shopping assistant for a Kenyan data bundle reseller called Berna Gee Internet Solutions. Given a customer's message and a shortlist of matching packages, write a short warm reply (2-4 sentences max, no markdown headers) recommending from the shortlist. Never invent packages or prices outside the shortlist provided.",
         messages: [
           {
             role: "user",

@@ -16,9 +16,9 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "BingwaSokoni — Instant Data, Minutes & SMS",
+  title: "Berna Gee — Instant Data, Minutes & SMS",
   description:
-    "Buy affordable data bundles, minutes and SMS in seconds. Pay with M-Pesa and get delivered instantly.",
+    "Buy affordable data bundles, minutes and SMS in seconds from Berna Gee. Pay with M-Pesa and get delivered instantly.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

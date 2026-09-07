@@ -21,7 +21,7 @@ type ChatMessage = {
 
 const STARTER: ChatMessage = {
   role: "assistant",
-  text: "Hi! I'm your BingwaSokoni assistant. Tell me what you need — e.g. \"cheap data for streaming under 60 bob\" — and I'll find the best deal.",
+  text: "Hi! I'm your Berna Gee assistant. Tell me what you need — e.g. \"cheap data for streaming under 60 bob\" — and I'll find the best deal.",
 };
 
 export function AIAssistant() {
@@ -93,7 +93,7 @@ export function AIAssistant() {
           <div className="flex items-center justify-between rounded-t-2xl bg-ink px-4 py-3.5 text-cream">
             <div className="flex items-center gap-2">
               <Sparkles size={16} className="text-signal" />
-              <p className="font-display text-sm font-bold">BingwaSokoni Assistant</p>
+              <p className="font-display text-sm font-bold">Berna Gee Assistant</p>
             </div>
             <button
               onClick={() => setOpen(false)}

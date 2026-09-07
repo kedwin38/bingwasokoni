@@ -30,7 +30,7 @@ export async function getMpesaConfig(): Promise<ResolvedMpesaConfig> {
       consumerKey: "",
       consumerSecret: "",
       passkey: "",
-      accountReference: "BingwaSokoni",
+      accountReference: "BernaGee",
       transactionDesc: "Data Bundle Purchase",
       callbackBaseUrl: null,
       isConfigured: false,

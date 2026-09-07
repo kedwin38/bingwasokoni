@@ -13,8 +13,8 @@ async function getSettings() {
   const settings = await prisma.siteSettings.findUnique({ where: { id: "default" } });
   return (
     settings ?? {
-      businessName: "BingwaSokoni",
-      tagline: "Fast. Reliable. Instant Data.",
+      businessName: "Berna Gee",
+      tagline: "Warm. Reliable. Customer-Friendly. 24/7 Support.",
       supportPhone: "0768050573",
       whatsappPhone: "0768050573",
     }

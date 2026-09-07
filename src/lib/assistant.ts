@@ -70,7 +70,7 @@ export async function askAssistant(message: string): Promise<AssistantResult> {
     const bestSellers = catalog.filter((p) => p.badge).slice(0, 3);
     return {
       reply:
-        "Hi! I'm your BingwaSokoni assistant. Tell me what you need — e.g. \"cheap data for streaming under 60 bob\" or \"minutes bundle for the week\" — and I'll pick the best deal for you.",
+        "Hi! I'm your Berna Gee assistant. Tell me what you need — e.g. \"cheap data for streaming under 60 bob\" or \"minutes bundle for the week\" — and I'll pick the best deal for you.",
       recommendations: bestSellers.length ? bestSellers : catalog.slice(0, 3),
     };
   }

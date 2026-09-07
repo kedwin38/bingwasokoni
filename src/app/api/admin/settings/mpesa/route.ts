@@ -17,7 +17,7 @@ export async function GET() {
           consumerKeyMasked: "",
           consumerSecretMasked: "",
           passkeyMasked: "",
-          accountReference: "BingwaSokoni",
+          accountReference: "BernaGee",
           transactionDesc: "Data Bundle Purchase",
           callbackBaseUrl: "",
           isConfigured: false,

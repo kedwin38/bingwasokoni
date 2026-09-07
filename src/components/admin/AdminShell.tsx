@@ -46,7 +46,7 @@ export function AdminShell({
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-signal text-ink">
             <Zap size={16} strokeWidth={2.5} />
           </span>
-          <span className="font-display text-sm font-bold">BingwaSokoni Admin</span>
+          <span className="font-display text-sm font-bold">Berna Gee Admin</span>
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4">
@@ -85,7 +85,7 @@ export function AdminShell({
 
       <div className="flex min-h-screen flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-line bg-white px-5 py-3 sm:hidden">
-          <span className="font-display text-sm font-bold text-ink">BingwaSokoni Admin</span>
+          <span className="font-display text-sm font-bold text-ink">Berna Gee Admin</span>
           <button onClick={logout} className="text-xs font-semibold text-forest">
             Sign out
           </button>

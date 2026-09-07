@@ -60,11 +60,14 @@ async function main() {
 
   await prisma.siteSettings.upsert({
     where: { id: "default" },
-    update: {},
+    update: {
+      businessName: "Berna Gee",
+      tagline: "Warm. Reliable. Customer-Friendly. 24/7 Support.",
+    },
     create: {
       id: "default",
-      businessName: "BingwaSokoni",
-      tagline: "Warm. Reliable. Instant Data, Minutes & SMS.",
+      businessName: "Berna Gee",
+      tagline: "Warm. Reliable. Customer-Friendly. 24/7 Support.",
       supportPhone: "0768050573",
       whatsappPhone: "0768050573",
     },
@@ -72,7 +75,9 @@ async function main() {
 
   await prisma.mpesaConfig.upsert({
     where: { id: "default" },
-    update: {},
+    update: {
+      accountReference: "BernaGee",
+    },
     create: {
       id: "default",
       environment: "sandbox",
@@ -83,7 +88,7 @@ async function main() {
       passkeyEnc: encryptSecret(
         "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919",
       ),
-      accountReference: "BingwaSokoni",
+      accountReference: "BernaGee",
       transactionDesc: "Data Bundle Purchase",
       callbackBaseUrl: null,
       isConfigured: false,

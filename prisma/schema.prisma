@@ -75,7 +75,7 @@ model MpesaConfig {
   consumerKeyEnc    String   @default("")
   consumerSecretEnc String   @default("")
   passkeyEnc        String   @default("")
-  accountReference  String   @default("BingwaSokoni")
+  accountReference  String   @default("BernaGee")
   transactionDesc   String   @default("Data Bundle Purchase")
   callbackBaseUrl   String?
   isConfigured      Boolean  @default(false)
@@ -84,8 +84,8 @@ model MpesaConfig {
 
 model SiteSettings {
   id            String   @id @default("default")
-  businessName  String   @default("BingwaSokoni")
-  tagline       String   @default("Fast. Reliable. Instant Data.")
+  businessName  String   @default("Berna Gee")
+  tagline       String   @default("Warm. Reliable. Customer-Friendly. 24/7 Support.")
   supportPhone  String   @default("0768050573")
   whatsappPhone String   @default("0768050573")
   updatedAt     DateTime @updatedAt
