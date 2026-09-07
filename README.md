@@ -80,6 +80,34 @@ Generate fresh secrets for production:
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
+## Deploying (e.g. Railway)
+
+`npm start` runs `prisma migrate deploy && npm run db:seed && next start` — so on every boot it applies pending migrations, seeds any *missing* default data (categories, sample packages, an M-Pesa config row, and the super admin, if none exist), then starts the server. Seeding is safe to run on every deploy: it only fills in rows that don't exist yet and never overwrites a package price, admin account, or settings you've already changed in the admin panel.
+
+For this to work, the host must provide these environment variables **before the first boot**:
+
+| Variable | Required | Notes |
+|---|---|---|
+| `DATABASE_URL` | Yes | See storage options below |
+| `APP_ENCRYPTION_KEY` | Yes | 32+ byte random hex string |
+| `JWT_SECRET` | Yes | 32+ byte random hex string |
+| `ANTHROPIC_API_KEY` | No | Optional, richer AI assistant replies |
+
+Generate the two secrets with:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Without `DATABASE_URL` set, `prisma migrate deploy` fails immediately and the deploy stops (visibly, in the build/deploy logs) rather than starting a broken server that 500s on every request.
+
+### Database storage on Railway (or any container host with an ephemeral filesystem)
+
+SQLite is a single file — if it's written to the container's local disk with **no persistent volume attached**, it is wiped on every redeploy or restart, taking every admin account, transaction, and price edit with it. For a live payment app, pick one of:
+
+- **Recommended: Railway Postgres plugin.** Add a Postgres database from Railway's "+ New" menu, then set this app's `DATABASE_URL` to the plugin's connection string (Railway lets you reference it as `${{Postgres.DATABASE_URL}}`). Then change `provider = "sqlite"` to `provider = "postgresql"` in `prisma/schema.prisma`, delete the `prisma/migrations` folder, and run `npx prisma migrate dev --name init` once locally against a Postgres instance to generate fresh Postgres-flavored migrations before deploying.
+- **Simpler: a Railway Volume.** Attach a volume to this service (e.g. mounted at `/data`) and set `DATABASE_URL=file:/data/prod.db`. Keeps SQLite, but only works with a single instance (no horizontal scaling) and ties your data to that one volume.
+
 ## Project structure
 
 ```

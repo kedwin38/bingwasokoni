@@ -48,22 +48,19 @@ async function main() {
 
   for (const pkg of packages) {
     const { slug, ...rest } = pkg;
+    // Only create missing packages — never overwrite an existing row, so an
+    // admin's price/description edits survive future deploys re-running seed.
     const existing = await prisma.package.findFirst({
       where: { name: rest.name, categoryId: categoryMap[slug] },
     });
-    if (existing) {
-      await prisma.package.update({ where: { id: existing.id }, data: rest });
-    } else {
+    if (!existing) {
       await prisma.package.create({ data: { ...rest, categoryId: categoryMap[slug] } });
     }
   }
 
   await prisma.siteSettings.upsert({
     where: { id: "default" },
-    update: {
-      businessName: "Berna Gee",
-      tagline: "Warm. Reliable. Customer-Friendly. 24/7 Support.",
-    },
+    update: {},
     create: {
       id: "default",
       businessName: "Berna Gee",
@@ -75,9 +72,7 @@ async function main() {
 
   await prisma.mpesaConfig.upsert({
     where: { id: "default" },
-    update: {
-      accountReference: "BernaGee",
-    },
+    update: {},
     create: {
       id: "default",
       environment: "sandbox",
