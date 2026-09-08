@@ -43,7 +43,7 @@ export function Hero({ settings }: { settings: SiteSettings }) {
 
         <div className="mt-6 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
           <TrustCard icon={<Zap size={16} />} title="Instant activation" subtitle="Delivered in seconds" />
-          <TrustCard icon={<ShieldCheck size={16} />} title="Secure M-Pesa" subtitle="Safaricom Daraja API" />
+          <TrustCard icon={<ShieldCheck size={16} />} title="Secure M-Pesa" subtitle="Encrypted end-to-end" />
           <TrustCard icon={<Clock3 size={16} />} title="24/7 support" subtitle="Always here to help" />
         </div>
       </div>

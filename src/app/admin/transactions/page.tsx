@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import { StatusBadge } from "@/components/admin/StatusBadge";
 
 type Transaction = {
@@ -8,6 +9,9 @@ type Transaction = {
   phoneNumber: string;
   amount: number;
   status: string;
+  gateway: string;
+  resultDesc: string | null;
+  failureSource: string | null;
   mpesaReceiptNumber: string | null;
   createdAt: string;
   package: { name: string; amountLabel: string } | null;
@@ -34,7 +38,7 @@ export default function AdminTransactionsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-2xl font-bold text-ink">Transactions</h1>
-        <p className="text-sm text-slate">All M-Pesa STK Push payment attempts.</p>
+        <p className="text-sm text-slate">All payment attempts, across whichever gateway processed them.</p>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -60,21 +64,23 @@ export default function AdminTransactionsPage() {
               <th className="px-4 py-3">Phone</th>
               <th className="px-4 py-3">Package</th>
               <th className="px-4 py-3">Amount</th>
+              <th className="px-4 py-3">Gateway</th>
               <th className="px-4 py-3">Receipt</th>
               <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Cause (if failed)</th>
               <th className="px-4 py-3">Time</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-slate">
+                <td colSpan={8} className="py-8 text-center text-slate">
                   Loading…
                 </td>
               </tr>
             ) : transactions.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-8 text-center text-slate">
+                <td colSpan={8} className="py-8 text-center text-slate">
                   No transactions found.
                 </td>
               </tr>
@@ -86,9 +92,33 @@ export default function AdminTransactionsPage() {
                     {t.package ? `${t.package.name} (${t.package.amountLabel})` : "—"}
                   </td>
                   <td className="px-4 py-3 text-slate">Ksh {t.amount}</td>
+                  <td className="px-4 py-3 text-slate">{t.gateway === "PESAPAL" ? "Pesapal" : "M-Pesa Daraja"}</td>
                   <td className="px-4 py-3 text-slate">{t.mpesaReceiptNumber ?? "—"}</td>
                   <td className="px-4 py-3">
                     <StatusBadge status={t.status} />
+                  </td>
+                  <td className="px-4 py-3 max-w-xs">
+                    {t.resultDesc && (t.status === "FAILED" || t.status === "TIMEOUT") ? (
+                      <div className="flex items-start gap-1.5">
+                        {t.failureSource === "SYSTEM" && (
+                          <span
+                            title="This failed because of our own API/config, not the customer"
+                            className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600"
+                          >
+                            <AlertTriangle size={11} />
+                          </span>
+                        )}
+                        <span
+                          className={`text-xs ${
+                            t.failureSource === "SYSTEM" ? "font-semibold text-red-700" : "text-slate"
+                          }`}
+                        >
+                          {t.resultDesc}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-slate">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-slate">{new Date(t.createdAt).toLocaleString()}</td>
                 </tr>

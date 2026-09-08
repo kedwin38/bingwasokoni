@@ -56,6 +56,17 @@ export const mpesaConfigInputSchema = z.object({
   callbackBaseUrl: z.string().url().optional().nullable(),
 });
 
+export const pesapalConfigInputSchema = z.object({
+  environment: z.enum(["sandbox", "production"]),
+  consumerKey: z.string().max(200).optional(),
+  consumerSecret: z.string().max(200).optional(),
+  callbackBaseUrl: z.string().url().optional().nullable(),
+});
+
+export const gatewaySettingsSchema = z.object({
+  activeGateway: z.enum(["DARAJA", "PESAPAL"]),
+});
+
 export const createAdminSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),

@@ -13,6 +13,7 @@ export function BuyModal({ pkg, onClose }: { pkg: PublicPackage; onClose: () => 
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [statusResult, setStatusResult] = useState<CheckoutStatus | null>(null);
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -41,8 +42,9 @@ export function BuyModal({ pkg, onClose }: { pkg: PublicPackage; onClose: () => 
         setSubmitting(false);
         return;
       }
+      setRedirectUrl(data.redirectUrl ?? null);
       setStage("waiting");
-      startPolling(data.checkoutRequestId);
+      startPolling(data.providerReference);
     } catch {
       setErrorMsg("Network error. Please check your connection and try again.");
     } finally {
@@ -82,11 +84,16 @@ export function BuyModal({ pkg, onClose }: { pkg: PublicPackage; onClose: () => 
     setStage("form");
     setStatusResult(null);
     setErrorMsg(null);
+    setRedirectUrl(null);
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 backdrop-blur-sm sm:items-center">
-      <div className="w-full max-w-md rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl">
+      <div
+        className={`w-full rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl ${
+          stage === "waiting" && redirectUrl ? "max-w-lg" : "max-w-md"
+        }`}
+      >
         <div className="mb-4 flex items-start justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-signal">
@@ -135,7 +142,23 @@ export function BuyModal({ pkg, onClose }: { pkg: PublicPackage; onClose: () => 
           </div>
         )}
 
-        {stage === "waiting" && (
+        {stage === "waiting" && redirectUrl && (
+          <div className="flex flex-col gap-3">
+            <p className="text-center text-sm text-slate">
+              Complete your Ksh {pkg.price} payment for {pkg.amountLabel} below.
+            </p>
+            <iframe
+              src={redirectUrl}
+              title="Complete payment"
+              className="h-[28rem] w-full rounded-xl border border-line"
+            />
+            <p className="text-center text-xs text-slate/70">
+              We&apos;ll detect your payment automatically once it&apos;s complete.
+            </p>
+          </div>
+        )}
+
+        {stage === "waiting" && !redirectUrl && (
           <div className="flex flex-col items-center gap-4 py-6 text-center">
             <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-signal-soft text-forest">
               <span className="pulse-ring absolute inline-flex h-16 w-16 text-signal" />

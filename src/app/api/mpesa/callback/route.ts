@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { FAILURE_SOURCE } from "@/lib/constants";
 
 type CallbackItem = { Name: string; Value?: string | number };
 
@@ -34,6 +35,9 @@ export async function POST(request: NextRequest) {
         resultDesc,
         mpesaReceiptNumber: mpesaReceiptNumber ?? null,
         rawCallback: JSON.stringify(body),
+        // Safaricom itself returned this outcome (e.g. cancelled by the
+        // customer, insufficient funds) — not a fault in our own system.
+        failureSource: resultCode === 0 ? null : FAILURE_SOURCE.PROVIDER,
       },
     });
 

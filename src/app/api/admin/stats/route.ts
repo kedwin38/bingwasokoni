@@ -20,6 +20,11 @@ export async function GET() {
       totalAdmins,
       recentTransactions,
       dailySeries,
+      systemFailureCount24h,
+      lastSystemFailure,
+      gatewaySettings,
+      mpesaConfig,
+      pesapalConfig,
     ] = await Promise.all([
       prisma.transaction.aggregate({ where: { status: "SUCCESS" }, _sum: { amount: true } }),
       prisma.transaction.aggregate({
@@ -41,6 +46,17 @@ export async function GET() {
         where: { status: "SUCCESS", createdAt: { gte: since7d } },
         select: { amount: true, createdAt: true },
       }),
+      prisma.transaction.count({
+        where: { failureSource: "SYSTEM", createdAt: { gte: since24h } },
+      }),
+      prisma.transaction.findFirst({
+        where: { failureSource: "SYSTEM" },
+        orderBy: { createdAt: "desc" },
+        select: { resultDesc: true, createdAt: true, gateway: true },
+      }),
+      prisma.gatewaySettings.findUnique({ where: { id: "default" } }),
+      prisma.mpesaConfig.findUnique({ where: { id: "default" } }),
+      prisma.pesapalConfig.findUnique({ where: { id: "default" } }),
     ]);
 
     const byDay: Record<string, number> = {};
@@ -48,6 +64,10 @@ export async function GET() {
       const key = t.createdAt.toISOString().slice(0, 10);
       byDay[key] = (byDay[key] ?? 0) + t.amount;
     }
+
+    const activeGateway = gatewaySettings?.activeGateway ?? "DARAJA";
+    const activeGatewayConfigured =
+      activeGateway === "PESAPAL" ? Boolean(pesapalConfig?.isConfigured) : Boolean(mpesaConfig?.isConfigured);
 
     return NextResponse.json({
       totalRevenue: totalRevenueAgg._sum.amount ?? 0,
@@ -62,6 +82,18 @@ export async function GET() {
       revenueByDay: Object.entries(byDay)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([date, amount]) => ({ date, amount })),
+      paymentHealth: {
+        activeGateway,
+        activeGatewayConfigured,
+        systemFailureCount24h,
+        lastSystemFailure: lastSystemFailure
+          ? {
+              reason: lastSystemFailure.resultDesc,
+              gateway: lastSystemFailure.gateway,
+              at: lastSystemFailure.createdAt,
+            }
+          : null,
+      },
     });
   } catch (error) {
     return handleApiError(error);

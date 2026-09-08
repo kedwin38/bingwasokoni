@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Loader2, ShieldCheck, ShieldAlert, Zap, Globe } from "lucide-react";
 
 type MpesaConfigView = {
   environment: "sandbox" | "production";
@@ -17,6 +17,15 @@ type MpesaConfigView = {
   isConfigured: boolean;
 };
 
+type PesapalConfigView = {
+  environment: "sandbox" | "production";
+  consumerKeyMasked: string;
+  consumerSecretMasked: string;
+  callbackBaseUrl: string;
+  ipnRegistered: boolean;
+  isConfigured: boolean;
+};
+
 type SiteSettingsForm = {
   businessName: string;
   tagline: string;
@@ -24,7 +33,12 @@ type SiteSettingsForm = {
   whatsappPhone: string;
 };
 
+type Gateway = "DARAJA" | "PESAPAL";
+
 export default function AdminSettingsPage() {
+  const [activeGateway, setActiveGateway] = useState<Gateway>("DARAJA");
+  const [switching, setSwitching] = useState(false);
+
   const [config, setConfig] = useState<MpesaConfigView | null>(null);
   const [mpesaForm, setMpesaForm] = useState({
     environment: "sandbox" as "sandbox" | "production",
@@ -37,11 +51,21 @@ export default function AdminSettingsPage() {
     transactionDesc: "",
     callbackBaseUrl: "",
   });
-  const [siteForm, setSiteForm] = useState<SiteSettingsForm | null>(null);
   const [savingMpesa, setSavingMpesa] = useState(false);
+
+  const [pesapalConfig, setPesapalConfig] = useState<PesapalConfigView | null>(null);
+  const [pesapalForm, setPesapalForm] = useState({
+    environment: "sandbox" as "sandbox" | "production",
+    consumerKey: "",
+    consumerSecret: "",
+    callbackBaseUrl: "",
+  });
+  const [savingPesapal, setSavingPesapal] = useState(false);
+
+  const [siteForm, setSiteForm] = useState<SiteSettingsForm | null>(null);
   const [savingSite, setSavingSite] = useState(false);
 
-  useEffect(() => {
+  function loadMpesa() {
     fetch("/api/admin/settings/mpesa")
       .then((res) => res.json())
       .then((data) => {
@@ -58,10 +82,58 @@ export default function AdminSettingsPage() {
             (typeof window !== "undefined" ? window.location.origin : ""),
         }));
       });
+  }
+
+  function loadPesapal() {
+    fetch("/api/admin/settings/pesapal")
+      .then((res) => res.json())
+      .then((data) => {
+        setPesapalConfig(data.config);
+        setPesapalForm((f) => ({
+          ...f,
+          environment: data.config.environment,
+          callbackBaseUrl:
+            data.config.callbackBaseUrl ||
+            (typeof window !== "undefined" ? window.location.origin : ""),
+        }));
+      });
+  }
+
+  useEffect(() => {
+    fetch("/api/admin/settings/gateway")
+      .then((res) => res.json())
+      .then((data) => setActiveGateway(data.activeGateway));
+    loadMpesa();
+    loadPesapal();
     fetch("/api/site-settings")
       .then((res) => res.json())
       .then((data) => setSiteForm(data.settings));
   }, []);
+
+  async function switchGateway(gateway: Gateway) {
+    if (gateway === activeGateway || switching) return;
+    setSwitching(true);
+    try {
+      const res = await fetch("/api/admin/settings/gateway", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activeGateway: gateway }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? "Could not switch payment gateway.");
+        return;
+      }
+      setActiveGateway(data.activeGateway);
+      if (data.warning) {
+        toast.warning(data.warning);
+      } else {
+        toast.success(`${gateway === "PESAPAL" ? "Pesapal" : "M-Pesa Daraja"} is now the active payment gateway.`);
+      }
+    } finally {
+      setSwitching(false);
+    }
+  }
 
   async function saveMpesa(e: React.FormEvent) {
     e.preventDefault();
@@ -77,12 +149,37 @@ export default function AdminSettingsPage() {
         toast.error(data.error ?? "Could not save M-Pesa settings.");
         return;
       }
-      toast.success("M-Pesa settings saved.");
+      toast.success("M-Pesa Daraja settings saved.");
       setMpesaForm((f) => ({ ...f, consumerKey: "", consumerSecret: "", passkey: "" }));
-      const refreshed = await fetch("/api/admin/settings/mpesa").then((r) => r.json());
-      setConfig(refreshed.config);
+      loadMpesa();
     } finally {
       setSavingMpesa(false);
+    }
+  }
+
+  async function savePesapal(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingPesapal(true);
+    try {
+      const res = await fetch("/api/admin/settings/pesapal", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(pesapalForm),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? "Could not save Pesapal settings.");
+        return;
+      }
+      if (data.warning) {
+        toast.warning(data.warning);
+      } else {
+        toast.success("Pesapal settings saved.");
+      }
+      setPesapalForm((f) => ({ ...f, consumerKey: "", consumerSecret: "" }));
+      loadPesapal();
+    } finally {
+      setSavingPesapal(false);
     }
   }
 
@@ -112,13 +209,47 @@ export default function AdminSettingsPage() {
       <div>
         <h1 className="font-display text-2xl font-bold text-ink">Payment &amp; Site Settings</h1>
         <p className="text-sm text-slate">
-          Manage the Safaricom Daraja API credentials used for STK Push payments, and general site info.
+          Choose which payment gateway is live, manage each gateway&apos;s API credentials, and general site info.
         </p>
       </div>
 
       <div className="rounded-2xl border border-line bg-white p-6">
+        <h2 className="mb-1 font-display text-lg font-bold text-ink">Active payment gateway</h2>
+        <p className="mb-4 text-sm text-slate">
+          Customers always pay with M-Pesa — this only controls which API processes the payment behind the scenes.
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <GatewayOption
+            label="M-Pesa Daraja"
+            description="Direct Safaricom STK Push integration."
+            icon={<Zap size={18} />}
+            active={activeGateway === "DARAJA"}
+            configured={config?.isConfigured ?? false}
+            disabled={switching}
+            onSelect={() => switchGateway("DARAJA")}
+          />
+          <GatewayOption
+            label="Pesapal"
+            description="Hosted checkout — M-Pesa, cards & more via Pesapal."
+            icon={<Globe size={18} />}
+            active={activeGateway === "PESAPAL"}
+            configured={pesapalConfig?.isConfigured ?? false}
+            disabled={switching}
+            onSelect={() => switchGateway("PESAPAL")}
+          />
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-line bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold text-ink">M-Pesa Daraja API</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-display text-lg font-bold text-ink">M-Pesa Daraja API</h2>
+            {activeGateway === "DARAJA" && (
+              <span className="rounded-full bg-forest px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cream">
+                Active
+              </span>
+            )}
+          </div>
           {config && (
             <span
               className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
@@ -220,7 +351,94 @@ export default function AdminSettingsPage() {
               className="flex items-center gap-2 rounded-xl bg-forest px-5 py-3 text-sm font-bold text-cream hover:bg-forest-dark disabled:opacity-60"
             >
               {savingMpesa ? <Loader2 size={16} className="animate-spin" /> : null}
-              Save M-Pesa settings
+              Save M-Pesa Daraja settings
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="rounded-2xl border border-line bg-white p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="font-display text-lg font-bold text-ink">Pesapal</h2>
+            {activeGateway === "PESAPAL" && (
+              <span className="rounded-full bg-forest px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cream">
+                Active
+              </span>
+            )}
+          </div>
+          {pesapalConfig && (
+            <span
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                pesapalConfig.isConfigured ? "bg-signal-soft text-forest-dark" : "bg-amber/20 text-amber-dark"
+              }`}
+            >
+              {pesapalConfig.isConfigured ? <ShieldCheck size={14} /> : <ShieldAlert size={14} />}
+              {pesapalConfig.isConfigured ? "Configured" : "Not fully configured"}
+            </span>
+          )}
+        </div>
+        <p className="mb-4 text-sm text-slate">
+          Saving valid credentials and a callback URL automatically registers the IPN webhook with Pesapal.
+          {pesapalConfig && (
+            <span className={pesapalConfig.ipnRegistered ? "text-forest-dark" : "text-amber-dark"}>
+              {" "}
+              IPN webhook: {pesapalConfig.ipnRegistered ? "registered" : "not registered yet"}.
+            </span>
+          )}
+        </p>
+
+        <form onSubmit={savePesapal} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Environment">
+            <select
+              value={pesapalForm.environment}
+              onChange={(e) =>
+                setPesapalForm({ ...pesapalForm, environment: e.target.value as "sandbox" | "production" })
+              }
+              className="w-full rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-forest"
+            >
+              <option value="sandbox">Sandbox (testing)</option>
+              <option value="production">Production (live)</option>
+            </select>
+          </Field>
+          <Field label="Callback base URL (your live domain)">
+            <input
+              required
+              placeholder="https://yourdomain.com"
+              value={pesapalForm.callbackBaseUrl}
+              onChange={(e) => setPesapalForm({ ...pesapalForm, callbackBaseUrl: e.target.value })}
+              className="w-full rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-forest"
+            />
+          </Field>
+          <Field
+            label={`Consumer Key ${pesapalConfig?.consumerKeyMasked ? `(current: ${pesapalConfig.consumerKeyMasked})` : ""}`}
+          >
+            <input
+              placeholder="Leave blank to keep current"
+              value={pesapalForm.consumerKey}
+              onChange={(e) => setPesapalForm({ ...pesapalForm, consumerKey: e.target.value })}
+              className="w-full rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-forest"
+            />
+          </Field>
+          <Field
+            label={`Consumer Secret ${pesapalConfig?.consumerSecretMasked ? `(current: ${pesapalConfig.consumerSecretMasked})` : ""}`}
+          >
+            <input
+              placeholder="Leave blank to keep current"
+              type="password"
+              value={pesapalForm.consumerSecret}
+              onChange={(e) => setPesapalForm({ ...pesapalForm, consumerSecret: e.target.value })}
+              className="w-full rounded-lg border border-line px-3 py-2.5 text-sm outline-none focus:border-forest"
+            />
+          </Field>
+          <div className="sm:col-span-2">
+            <button
+              type="submit"
+              disabled={savingPesapal}
+              className="flex items-center gap-2 rounded-xl bg-forest px-5 py-3 text-sm font-bold text-cream hover:bg-forest-dark disabled:opacity-60"
+            >
+              {savingPesapal ? <Loader2 size={16} className="animate-spin" /> : null}
+              Save Pesapal settings
             </button>
           </div>
         </form>
@@ -278,6 +496,57 @@ export default function AdminSettingsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function GatewayOption({
+  label,
+  description,
+  icon,
+  active,
+  configured,
+  disabled,
+  onSelect,
+}: {
+  label: string;
+  description: string;
+  icon: React.ReactNode;
+  active: boolean;
+  configured: boolean;
+  disabled: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      disabled={disabled}
+      className={`flex items-start gap-3 rounded-2xl border p-4 text-left transition-colors disabled:opacity-60 ${
+        active ? "border-forest bg-signal-soft/40" : "border-line bg-white hover:border-forest/40"
+      }`}
+    >
+      <span
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
+          active ? "bg-forest text-cream" : "bg-cream-deep text-slate"
+        }`}
+      >
+        {icon}
+      </span>
+      <div className="flex-1">
+        <div className="flex items-center gap-2">
+          <p className="font-semibold text-ink">{label}</p>
+          {active && (
+            <span className="rounded-full bg-forest px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-cream">
+              Active
+            </span>
+          )}
+        </div>
+        <p className="mt-0.5 text-xs text-slate">{description}</p>
+        <p className={`mt-1.5 text-xs font-semibold ${configured ? "text-forest-dark" : "text-amber-dark"}`}>
+          {configured ? "Ready" : "Needs setup"}
+        </p>
+      </div>
+    </button>
   );
 }
 

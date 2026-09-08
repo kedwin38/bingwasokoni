@@ -90,6 +90,27 @@ async function main() {
     },
   });
 
+  await prisma.pesapalConfig.upsert({
+    where: { id: "default" },
+    update: {},
+    create: {
+      id: "default",
+      environment: "sandbox",
+      consumerKeyEnc: encryptSecret(""),
+      consumerSecretEnc: encryptSecret(""),
+      ipnId: null,
+      ipnUrl: null,
+      callbackBaseUrl: null,
+      isConfigured: false,
+    },
+  });
+
+  await prisma.gatewaySettings.upsert({
+    where: { id: "default" },
+    update: {},
+    create: { id: "default", activeGateway: "DARAJA" },
+  });
+
   const superAdminEmail = "annmbaya25@outlook.com";
   const existingAdmin = await prisma.admin.findUnique({ where: { email: superAdminEmail } });
   if (!existingAdmin) {

@@ -19,3 +19,20 @@ export const MESSAGE_STATUS = {
   RESOLVED: "RESOLVED",
 } as const;
 export type MessageStatusType = (typeof MESSAGE_STATUS)[keyof typeof MESSAGE_STATUS];
+
+export const PAYMENT_GATEWAYS = {
+  DARAJA: "DARAJA",
+  PESAPAL: "PESAPAL",
+} as const;
+export type PaymentGateway = (typeof PAYMENT_GATEWAYS)[keyof typeof PAYMENT_GATEWAYS];
+
+/// SYSTEM = our own configuration/API-call failure, not the customer's fault.
+/// PROVIDER = the gateway (or the customer, e.g. cancelled/insufficient funds) declined the request.
+export const FAILURE_SOURCE = {
+  SYSTEM: "SYSTEM",
+  PROVIDER: "PROVIDER",
+} as const;
+export type FailureSourceType = (typeof FAILURE_SOURCE)[keyof typeof FAILURE_SOURCE];
+
+export const GENERIC_PAYMENT_ERROR_MESSAGE =
+  "We couldn't process your payment right now. Please try again in a moment, or contact support if this keeps happening.";

@@ -25,7 +25,7 @@ export function SiteFooter({ settings }: { settings: SiteSettings }) {
             <MessageCircle size={15} /> WhatsApp us
           </a>
           <span className="flex items-center gap-2 text-cream/50">
-            <ShieldCheck size={15} /> Secured by Safaricom Daraja
+            <ShieldCheck size={15} /> Secure M-Pesa Payments
           </span>
         </div>
       </div>

@@ -50,6 +50,8 @@ model Package {
 }
 
 /// TransactionStatus: "PENDING" | "SUCCESS" | "FAILED" | "CANCELLED" | "TIMEOUT"
+/// gateway: "DARAJA" | "PESAPAL"
+/// failureSource: "SYSTEM" (our own config/API-call failure, not the customer's fault) | "PROVIDER" (the gateway/customer declined the request)
 model Transaction {
   id                 String    @id @default(cuid())
   packageId          String?
@@ -57,11 +59,13 @@ model Transaction {
   phoneNumber        String
   amount             Int
   status             String    @default("PENDING")
+  gateway            String    @default("DARAJA")
   merchantRequestId  String?
   checkoutRequestId  String?   @unique
   mpesaReceiptNumber String?
   resultCode         Int?
   resultDesc         String?
+  failureSource      String?
   rawCallback        String?
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
@@ -80,6 +84,25 @@ model MpesaConfig {
   callbackBaseUrl   String?
   isConfigured      Boolean  @default(false)
   updatedAt         DateTime @updatedAt
+}
+
+model PesapalConfig {
+  id                String   @id @default("default")
+  environment       String   @default("sandbox")
+  consumerKeyEnc    String   @default("")
+  consumerSecretEnc String   @default("")
+  ipnId             String?
+  ipnUrl            String?
+  callbackBaseUrl   String?
+  isConfigured      Boolean  @default(false)
+  updatedAt         DateTime @updatedAt
+}
+
+/// activeGateway: "DARAJA" | "PESAPAL"
+model GatewaySettings {
+  id            String   @id @default("default")
+  activeGateway String   @default("DARAJA")
+  updatedAt     DateTime @updatedAt
 }
 
 model SiteSettings {
